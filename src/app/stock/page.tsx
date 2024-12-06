@@ -1,12 +1,10 @@
 "use client";
 import React, { useState } from "react";
 import { Button } from "primereact/button";
-import DataTableComponent from "@/components/common/DataTable";
-import DialogNewProduct from "@/components/common/DialogNewProduct";
+import DataTableComponent from "@/components/products/DataTableProducts";
+import DialogNewProduct from "@/components/products/DialogNewProduct";
 import { InputText } from "primereact/inputtext";
-import { Dropdown } from "primereact/dropdown";
-import { Dialog } from "primereact/dialog";
-import DialogFilters from "@/components/common/DialogFilters";
+import DialogFilters from "@/components/products/DialogFiltersProducts";
 
 interface Product {
   id: number;
