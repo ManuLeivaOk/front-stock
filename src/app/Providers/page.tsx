@@ -8,39 +8,16 @@ import axios from "axios";
 
 interface Provider {
   id: number;
-  name: string;
-  phone: string;
-  address: string;
+  nombre: string;
+  telefono: string;
+  direccion: string;
   email: string;
 }
 
 const Page: React.FC = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
-  const [loading, setLoading] = useState<boolean>(true); // cuando inicia el componente
-  // const [providers, setProviders] = useState<Provider[]>([
-  //   {
-  //     id: 1,
-  //     name: "Proveedor A",
-  //     phone: "123456789",
-  //     address: "Calle Ficticia 123",
-  //     email: "proveedora@example.com",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Proveedor B",
-  //     phone: "987654321",
-  //     address: "Avenida Real 456",
-  //     email: "proveedorb@example.com",
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Proveedor C",
-  //     phone: "555666777",
-  //     address: "Calle Inventada 789",
-  //     email: "proveedorc@example.com",
-  //   },
-  // ]);
-
+  const [loading, setLoading] = useState<boolean>(true);
+  const [progress, setProgress] = useState<number>(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredProviders, setFilteredProviders] = useState(providers);
   const [showFilterDialog, setShowFilterDialog] = useState(false);
@@ -48,14 +25,28 @@ const Page: React.FC = () => {
   const [showDialog, setShowDialog] = useState(false);
 
   useEffect(() => {
+    // Simular progreso de carga
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setLoading(false); // Termina la carga
+          return 100;
+        }
+        return prev + 10; // Incrementa el progreso
+      });
+    }, 300);
+
     fetchProveedores();
+
+    return () => clearInterval(interval); // Limpia el intervalo
   }, []);
 
   const fetchProveedores = async () => {
     try {
       const response = await axios.get("http://localhost:1337/api/proveedors");
-      setProviders(response.data.data); //respuesta del back
-      setLoading(false);
+      setProviders(response.data.data);
+      setFilteredProviders(response.data.data); // Filtrados iniciales
     } catch (error) {
       console.log(error);
       setLoading(false);
@@ -64,7 +55,7 @@ const Page: React.FC = () => {
 
   const handleSearch = () => {
     const filtered = providers.filter((provider) =>
-      provider.name.toLowerCase().includes(searchTerm.toLowerCase())
+      provider.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredProviders(filtered);
   };
@@ -106,7 +97,39 @@ const Page: React.FC = () => {
   return (
     <>
       {loading ? (
-        <div>Cargando...</div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "100vh",
+            width: "100%",
+            backgroundColor: "#000",
+            color: "#fff",
+          }}
+        >
+          {/* Barra de progreso horizontal */}
+          <div
+            style={{
+              width: "80%",
+              height: "20px",
+              backgroundColor: "#e0e0e0",
+              borderRadius: "10px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: `${progress}%`,
+                height: "100%",
+                backgroundColor: "#60A5FA", // Color azul
+                transition: "width 0.3s ease",
+              }}
+            ></div>
+          </div>
+          <p style={{ marginTop: "10px" }}>Cargando información...</p>
+        </div>
       ) : (
         <div className="p-m-5 px-8">
           {/* Header */}
@@ -142,7 +165,7 @@ const Page: React.FC = () => {
 
           {/* Data Table */}
           <DataTableComponent
-            providers={providers}
+            providers={filteredProviders}
             actionBodyTemplate={actionBodyTemplate}
           />
 
@@ -170,7 +193,6 @@ const Page: React.FC = () => {
                 icon="pi pi-check"
                 className="p-button-primary mx-2"
                 onClick={() => {
-                  // Lógica de filtros avanzados aquí
                   setShowFilterDialog(false);
                 }}
               />

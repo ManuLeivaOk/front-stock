@@ -18,13 +18,9 @@ export default function Header() {
     {
       label: "Proveedores",
       icon: "pi pi-users",
-      command: () => (window.location.href = "/proveedores"),
+      command: () => (window.location.href = "/Providers"),
     },
-    /*     {
-      label: "Centro cultural",
-      icon: "pi pi-building-columns",
-      command: () => (window.location.href = "/inicio"),
-    },
+    /*    
     {
       label: "Biblioteca",
       icon: "pi pi-book",
@@ -36,14 +32,27 @@ export default function Header() {
       command: () => (window.location.href = "/inicio"),
     },
     {
-      label: "Guardería",
-      icon: "pi pi-palette",
-      command: () => (window.location.href = "/inicio"),
-    }, */
-    {
       label: "Tipos de producto",
       icon: "pi pi-box",
       command: () => (window.location.href = "/tipos-de-producto"),
+    },
+    */
+    {
+      label: "Familias",
+      icon: "pi pi-sitemap",
+      command: () => (window.location.href = "/familia"),
+    }, 
+    
+    {
+      label: "Cliente",
+      icon: "pi pi-user",
+      command: () => (window.location.href = "/Cliente"),
+    },
+
+    {
+      label: "Venta",
+      icon: "pi pi-shopping-cart",
+      command: () => (window.location.href = "/venta"),
     },
   ];
 
