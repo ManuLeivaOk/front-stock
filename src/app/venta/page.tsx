@@ -59,19 +59,21 @@ export default function DetalleVenta() {
   const fetchclientes = async () => {
     try {
       const response = await axios.get("http://localhost:1337/api/clientes");
+      // Procesa los clientes asegurando que la estructura sea correcta
       const clientesProcesados = response.data.data.map((cliente: any) => ({
         id: cliente.id,
-        ...cliente.attributes, // Esto desestructura correctamente los atributos
+        nombre: cliente.nombre, // Extrae directamente el nombre
+        ...cliente, // Incluye el resto de los campos
       }));
+      console.log("Clientes procesados:", clientesProcesados);
       setClientes(clientesProcesados);
       setLoading(false);
     } catch (error) {
       console.error("Error al obtener los clientes", error);
+      setClientes([]); // Inicializa como un array vacío en caso de error
       setLoading(false);
     }
   };
-  
-  
 
   const agregarDetalle = () => {
     const nuevoDetalle: DetalleVenta = {
@@ -119,8 +121,9 @@ export default function DetalleVenta() {
   const filtrarClientes = (e: { query: string }) => {
     const filtro = e.query.toLowerCase();
     setClienteFiltro(
-      clientes.filter((cliente: any) =>
-        cliente.nombre.toLowerCase().includes(filtro)
+      clientes.filter(
+        (cliente: any) =>
+          cliente.nombre && cliente.nombre.toLowerCase().includes(filtro)
       )
     );
   };
@@ -136,7 +139,7 @@ export default function DetalleVenta() {
               value={clienteSeleccionado}
               suggestions={clienteFiltro}
               completeMethod={filtrarClientes}
-              field="nombre"
+              field="nombre" // Este campo debe coincidir con la propiedad del objeto cliente
               onChange={(e) => setClienteSeleccionado(e.value)}
               placeholder="Escribir nombre del cliente"
               className="w-full"
