@@ -212,13 +212,11 @@ export default function DetalleVenta() {
           />
           <Column
             header="Descripción"
-            body={(rowData: { descripcion: string | null | undefined; }, options: { rowIndex: number; }) => (
+            body={(rowData) => (
               <InputText
-                value={rowData.descripcion}
-                onChange={(e) =>
-                  actualizarDetalle(options.rowIndex, "descripcion", e.target.value)
-                }
-                placeholder="Escribir descripción"
+                value={rowData.producto ? rowData.producto.descripcion : ""}
+                disabled
+                placeholder="Descripción del producto"
               />
             )}
           />
