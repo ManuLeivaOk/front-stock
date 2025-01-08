@@ -1,142 +1,89 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Button } from "primereact/button";
-import DataTableComponent from "@/components/products/DataTableProducts";
-import DialogNewProduct from "@/components/products/DialogNewProduct";
+import DataTableComponent from "@/components/historialVenta/DataTableHistorialVenta";
+import DialogNewProduct from "@/components/historialVenta/DialogNewHistorialVenta";
 import { InputText } from "primereact/inputtext";
-import DialogFilters from "@/components/products/DialogFiltersProducts";
+import DialogFilters from "@/components/historialVenta/DialogFiltersHistorialVenta";
 import axios from "axios";
 
-
-interface Product {
+interface historialVenta {
+  fecha_venta: string;
   id: number;
-  nombre: string;
-  stock: number;
-  precio: number;
-  familia: string;
-  provider: string;
-  descripcion: string;
+  total: number;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
 }
 
 const StockPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [venta, setVenta] = useState<historialVenta[]>([]);
+  const [filteredVenta, setFilteredVenta] = useState<historialVenta[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [progress, setProgress] = useState<number>(0);
   const [showDialog, setShowDialog] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [currentVenta, setCurrentVenta] = useState<historialVenta | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilterDialog, setShowFilterDialog] = useState(false);
 
   useEffect(() => {
-    // Simular el progreso del loading
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
-          setLoading(false); // Loading finalizado
+          setLoading(false);
           return 100;
         }
-        return prev + 10; // Incrementa el progreso
+        return prev + 10;
       });
     }, 300);
 
-    fetchProducts();
-    
+    fetchVenta();
 
-    return () => clearInterval(interval); // Limpiar el intervalo al desmontar
+    return () => clearInterval(interval);
   }, []);
 
-  // Carga de productos por una llamada a la API)
-  async function fetchProducts() {
+  async function fetchVenta() {
     try {
-      const response = await axios.get("http://localhost:1337/api/productos?populate[familia]=true&populate[proveedors]=true");
-      setProducts(response.data.data);
-      setFilteredProducts(response.data.data); // Filtrados iniciales
+      const response = await axios.get("http://localhost:1337/api/ventas");
+      setVenta(response.data.data);
+      setFilteredVenta(response.data.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setLoading(false);
     }
   }
 
-  // setTimeout(() => {
-  //   const fetchedProducts = [
-  //     {
-  //       id: 1,
-  //       name: "Producto A",
-  //       stock: 10,
-  //       price: 50,
-  //       family: "Electrónica",
-  //       provider: "Proveedor X",
-  //     },
-  //     {
-  //       id: 2,
-  //       name: "Producto B",
-  //       stock: 5,
-  //       price: 75,
-  //       family: "Hogar",
-  //       provider: "Proveedor Y",
-  //     },
-  //     {
-  //       id: 3,
-  //       name: "Producto C",
-  //       stock: 20,
-  //       price: 100,
-  //       family: "Jardinería",
-  //       provider: "Proveedor Z",
-  //     },
-  //   ];
-  //   setProducts(fetchedProducts);
-  //   setFilteredProducts(fetchedProducts);
-  // }, 3000);
-
   const handleSearch = () => {
-    const filtered = products.filter((product) =>
-      product.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = venta.filter((v) =>
+      historialVenta.fecha_venta.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setFilteredProducts(filtered);
+    setFilteredVenta(filtered);
   };
 
   const handleClearSearch = () => {
     setSearchTerm("");
-    setFilteredProducts(products);
+    setFilteredVenta(venta);
   };
 
-  const handleAddProduct = () => {
-    setCurrentProduct(null);
-    setShowDialog(true);
-  };
-
-  const handleEditProduct = (product: Product) => {
-    setCurrentProduct(product);
-    setShowDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setShowDialog(false);
-  };
-
-  const actionBodyTemplate = (rowData: Product) => {
+  const actionBodyTemplate = (rowData: historialVenta) => {
     return (
       <div className="flex gap-2">
         <Button
           label="Editar"
           icon="pi pi-pencil"
           className="p-button-rounded p-button-warning"
-          onClick={() => handleEditProduct(rowData)}
+          onClick={() => console.log("Editar venta", rowData.id)}
         />
         <Button
           label="Eliminar"
           icon="pi pi-trash"
           className="p-button-rounded p-button-danger"
-          onClick={() => console.log("Eliminar producto", rowData.id)}
+          onClick={() => console.log("Eliminar venta", rowData.id)}
         />
       </div>
     );
   };
-
-  const families = ["Electrónica", "Hogar", "Jardinería"];
-  const providers = ["Proveedor X", "Proveedor Y", "Proveedor Z"];
 
   return (
     <>
@@ -153,7 +100,6 @@ const StockPage: React.FC = () => {
             color: "#fff",
           }}
         >
-          {/* Barra de progreso horizontal */}
           <div
             style={{
               width: "80%",
@@ -177,18 +123,12 @@ const StockPage: React.FC = () => {
       ) : (
         <div className="p-m-5 px-8">
           <div className="w-full flex justify-content-between items-center my-4">
-            <h1 className="p-text-bold mb-4">Gestión de Stock</h1>
-            <Button
-              label="Agregar Producto"
-              icon="pi pi-plus"
-              className="my-3"
-              onClick={handleAddProduct}
-            />
+            <h1 className="p-text-bold mb-4">Historial de Ventas</h1>
           </div>
 
           <div className="flex gap-2 items-center mb-4">
             <InputText
-              placeholder="Buscar producto..."
+              placeholder="Buscar Venta"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="p-inputtext-sm"
@@ -207,16 +147,14 @@ const StockPage: React.FC = () => {
           </div>
 
           <DataTableComponent
-            products={filteredProducts}
+            historialVenta={filteredVenta} // Cambiado para pasar la lista correctamente
             actionBodyTemplate={actionBodyTemplate}
           />
 
           <DialogNewProduct
-            currentProduct={currentProduct}
+            currentProduct={currentVenta}
             showDialog={showDialog}
-            handleCloseDialog={handleCloseDialog}
-            families={families}
-            providers={providers}
+            handleCloseDialog={() => setShowDialog(false)}
           />
 
           <DialogFilters
