@@ -9,16 +9,7 @@ import { DataTable, Column } from "primereact/datatable";
 import { InputNumber } from "primereact/inputnumber";
 import axios from "axios";
 
-const productosDisponibles = [
-  { id: 1, nombre: "Producto A", precio: 10.0 },
-  { id: 2, nombre: "Producto B", precio: 15.0 },
-  { id: 3, nombre: "Producto C", precio: 7.5 },
-  { id: 4, nombre: "Producto D", precio: 25.0 },
-  { id: 5, nombre: "Producto E", precio: 30.0 },
-  { id: 999, nombre: "Otros", precio: 0 },
-];
-
-interface Producto {
+interface Products {
   id: number;
   nombre: string;
   precio: number;
@@ -26,7 +17,7 @@ interface Producto {
 
 interface DetalleVenta {
   id: number;
-  producto: Producto | null;
+  producto: Products | null;
   cantidad: number;
   precioUnitario: number;
   subtotal: number;
@@ -38,14 +29,19 @@ export default function DetalleVenta() {
   const [fecha, setFecha] = useState<Date | null>(null);
   const [detalles, setDetalles] = useState<DetalleVenta[]>([]);
   const [total, setTotal] = useState<number>(0);
-  const [productoFiltro, setProductoFiltro] = useState<Producto[]>([]);
+  const [productoFiltro, setProductoFiltro] = useState<Products[]>([]);
   const [clienteFiltro, setClienteFiltro] = useState<any[]>([]);
   const [clientes, setClientes] = useState([]);
+  const [products, setProducts] = useState<Products[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [numeroComprobante, setNumeroComprobante] = useState<number>(1);
+
   useEffect(() => {
-    fetchclientes();
+    fetchClientes();
+    fetchProductos();
     setFecha(new Date());
+    setNumeroComprobante((prev) => prev + 1); // Incrementa al cargar el componente
   }, []);
 
   useEffect(() => {
@@ -56,22 +52,36 @@ export default function DetalleVenta() {
     setTotal(nuevoTotal);
   }, [detalles]);
 
-  const fetchclientes = async () => {
+  const fetchClientes = async () => {
     try {
       const response = await axios.get("http://localhost:1337/api/clientes");
-      // Procesa los clientes asegurando que la estructura sea correcta
       const clientesProcesados = response.data.data.map((cliente: any) => ({
         id: cliente.id,
-        nombre: cliente.nombre, // Extrae directamente el nombre
-        ...cliente, // Incluye el resto de los campos
+        nombre: cliente.nombre,
+        ...cliente,
       }));
-      console.log("Clientes procesados:", clientesProcesados);
       setClientes(clientesProcesados);
       setLoading(false);
     } catch (error) {
       console.error("Error al obtener los clientes", error);
-      setClientes([]); // Inicializa como un array vacío en caso de error
+      setClientes([]);
       setLoading(false);
+    }
+  };
+
+  const fetchProductos = async () => {
+    try {
+      const response = await axios.get("http://localhost:1337/api/productos");
+      const productosProcesados = response.data.data.map((producto: any) => ({
+        id: producto.id,
+        nombre: producto.nombre || "Sin nombre",
+        precio: producto.precio_venta || 0,
+        descripcion: producto.descripcion || "Sin descripcion",
+      }));
+      setProducts(productosProcesados);
+    } catch (error) {
+      console.error("Error al obtener los productos:", error);
+      setProducts([]);
     }
   };
 
@@ -94,9 +104,6 @@ export default function DetalleVenta() {
     if (campo === "producto") {
       detalle.producto = valor;
       detalle.precioUnitario = valor ? valor.precio : 0;
-      if (valor && valor.id !== 999) {
-        detalle.descripcion = ""; // Limpiar descripción si no es "Otros"
-      }
     } else if (campo === "cantidad") {
       detalle.cantidad = valor;
     } else if (campo === "descripcion") {
@@ -109,23 +116,23 @@ export default function DetalleVenta() {
     setDetalles(nuevosDetalles);
   };
 
-  const filtrarProductos = (e: { query: string }) => {
-    const filtro = e.query.toLowerCase();
-    setProductoFiltro(
-      productosDisponibles.filter((producto) =>
-        producto.nombre.toLowerCase().includes(filtro)
-      )
-    );
+  const guardarVenta = () => {
+    console.log("Guardar venta", detalles);
+    alert("Venta guardada exitosamente.");
   };
 
-  const filtrarClientes = (e: { query: string }) => {
-    const filtro = e.query.toLowerCase();
-    setClienteFiltro(
-      clientes.filter(
-        (cliente: any) =>
-          cliente.nombre && cliente.nombre.toLowerCase().includes(filtro)
-      )
-    );
+  const cancelarVenta = () => {
+    if (confirm("¿Estás seguro de que deseas cancelar la venta?")) {
+      setDetalles([]);
+      setClienteSeleccionado(null);
+      setTotal(0);
+      alert("Venta cancelada.");
+    }
+  };
+
+  const imprimirVenta = () => {
+    alert("Imprimir funcionalidad no implementada aún.");
+    console.log("Venta a imprimir", detalles);
   };
 
   return (
@@ -138,23 +145,42 @@ export default function DetalleVenta() {
               id="cliente"
               value={clienteSeleccionado}
               suggestions={clienteFiltro}
-              completeMethod={filtrarClientes}
-              field="nombre" // Este campo debe coincidir con la propiedad del objeto cliente
+              completeMethod={(e) =>
+                setClienteFiltro(
+                  clientes.filter((cliente: any) =>
+                    cliente.nombre.toLowerCase().includes(e.query.toLowerCase())
+                  )
+                )
+              }
+              field="nombre"
               onChange={(e) => setClienteSeleccionado(e.value)}
               placeholder="Escribir nombre del cliente"
               className="w-full"
             />
           </div>
           <div className="field col-12 md:col-6">
-            <label htmlFor="fecha">Fecha</label>
-            <Calendar
-              id="fecha"
-              value={fecha}
-              onChange={(e) => setFecha(e.value)}
-              dateFormat="dd/mm/yy"
-              className="w-full"
-              disabled
-            />
+            <div className="flex justify-content-between align-items-center">
+              <div>
+                <label htmlFor="numeroComprobante">N° Comprobante</label>
+                <InputText
+                  id="numeroComprobante"
+                  value={numeroComprobante}
+                  disabled
+                  className="w-full md:w-10rem"
+                />
+              </div>
+              <div>
+                <label htmlFor="fecha">Fecha</label>
+                <Calendar
+                  id="fecha"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.value)}
+                  dateFormat="dd/mm/yy"
+                  className="w-full md:w-10rem"
+                  disabled
+                />
+              </div>
+            </div>
           </div>
         </div>
       </Card>
@@ -167,7 +193,15 @@ export default function DetalleVenta() {
               <AutoComplete
                 value={rowData.producto}
                 suggestions={productoFiltro}
-                completeMethod={filtrarProductos}
+                completeMethod={(e) =>
+                  setProductoFiltro(
+                    products.filter((producto) =>
+                      producto.nombre
+                        .toLowerCase()
+                        .includes(e.query.toLowerCase())
+                    )
+                  )
+                }
                 field="nombre"
                 onChange={(e) =>
                   actualizarDetalle(options.rowIndex, "producto", e.value)
@@ -178,18 +212,27 @@ export default function DetalleVenta() {
           />
           <Column
             header="Descripción"
-            body={(rowData, options) => (
+            body={(rowData: { descripcion: string | null | undefined; }, options: { rowIndex: number; }) => (
               <InputText
-                value={rowData.descripcion || ""}
+                value={rowData.descripcion}
                 onChange={(e) =>
-                  actualizarDetalle(
-                    options.rowIndex,
-                    "descripcion",
-                    e.target.value
-                  )
+                  actualizarDetalle(options.rowIndex, "descripcion", e.target.value)
                 }
                 placeholder="Escribir descripción"
-                disabled={rowData.producto?.id !== 999}
+              />
+            )}
+          />
+          <Column
+            header="Precio Unitario"
+            body={(rowData, options) => (
+              <InputNumber
+                value={rowData.precioUnitario}
+                onValueChange={(e) =>
+                  actualizarDetalle(options.rowIndex, "precioUnitario", e.value)
+                }
+                mode="currency"
+                currency="USD"
+                placeholder="0.00"
               />
             )}
           />
@@ -201,36 +244,13 @@ export default function DetalleVenta() {
                 onValueChange={(e) =>
                   actualizarDetalle(options.rowIndex, "cantidad", e.value)
                 }
-                min={0}
-                placeholder="Cantidad"
+                placeholder="0"
               />
             )}
           />
           <Column
-            header="Precio Unitario"
-            body={(rowData, options) =>
-              rowData.producto && rowData.producto.id === 999 ? (
-                <InputNumber
-                  value={rowData.precioUnitario}
-                  onValueChange={(e) =>
-                    actualizarDetalle(
-                      options.rowIndex,
-                      "precioUnitario",
-                      e.value
-                    )
-                  }
-                  mode="currency"
-                  currency="USD"
-                  placeholder="Precio"
-                />
-              ) : (
-                `$${(rowData.precioUnitario || 0).toFixed(2)}`
-              )
-            }
-          />
-          <Column
             header="Subtotal"
-            body={(rowData) => `$${(rowData.subtotal || 0).toFixed(2)}`}
+            body={(rowData) => <span>{rowData.subtotal.toFixed(2)}</span>}
           />
         </DataTable>
         <Button
@@ -239,26 +259,27 @@ export default function DetalleVenta() {
           className="my-3 p-button p-component"
           onClick={agregarDetalle}
         />
+        <div className="flex justify-content-end gap-3 mt-4">
+          <Button
+            label="Guardar"
+            icon="pi pi-save"
+            className="p-button-success"
+            onClick={guardarVenta}
+          />
+          <Button
+            label="Cancelar"
+            icon="pi pi-times"
+            className="p-button-danger"
+            onClick={cancelarVenta}
+          />
+          <Button
+            label="Imprimir"
+            icon="pi pi-print"
+            className="p-button-primary"
+            onClick={imprimirVenta}
+          />
+        </div>
       </Card>
-
-      <div className="flex justify-end mt-4">
-        <h3>
-          Total: <strong>${total.toFixed(2)}</strong>
-        </h3>
-      </div>
-
-      <div className="flex justify-end gap-2 mt-4">
-        <Button
-          label="Guardar Venta"
-          icon="pi pi-save"
-          className="p-button-rounded p-button-warning p-button p-component"
-        />
-        <Button
-          label="Cancelar"
-          icon="pi pi-times"
-          className="p-button-rounded p-button-danger p-button p-component"
-        />
-      </div>
     </div>
   );
 }

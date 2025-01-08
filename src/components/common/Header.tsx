@@ -48,11 +48,16 @@ export default function Header() {
       icon: "pi pi-user",
       command: () => (window.location.href = "/Cliente"),
     },
+    {
+      label: "Historial de Ventas",
+      icon: "pi pi-shopping-bag",
+      command: () => (window.location.href = "/historialVenta"),
+    },
 
     {
       label: "Venta",
       icon: "pi pi-shopping-cart",
-      command: () => (window.location.href = "/venta"),
+      command: () => (window.location.href = "/detalleVenta"),
     },
   ];
 
