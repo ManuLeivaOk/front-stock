@@ -186,7 +186,7 @@ export default function DetalleVenta() {
       </Card>
 
       <Card title="Detalles de Productos" className="mt-4">
-        <DataTable value={detalles} responsiveLayout="scroll">
+        <DataTable value={detalles} emptyMessage={"No se encontraron productos"}>
           <Column
             header="Producto"
             body={(rowData, options) => (
@@ -251,10 +251,15 @@ export default function DetalleVenta() {
             body={(rowData) => <span>{rowData.subtotal.toFixed(2)}</span>}
           />
         </DataTable>
+        <div className="flex justify-content-end align-items-center mt-3 mr-8">
+          <p className="font-bold">Total: </p>
+          <span className="ml-2">${total.toFixed(2)}</span>
+      </div>
+
         <Button
           label="Agregar Producto"
           icon="pi pi-plus"
-          className="my-3 p-button p-component"
+          className="mt-5 p-button p-component"
           onClick={agregarDetalle}
         />
         <div className="flex justify-content-end gap-3 mt-4">
